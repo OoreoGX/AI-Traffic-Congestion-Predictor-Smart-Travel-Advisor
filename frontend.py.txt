@@ -1,0 +1,81 @@
+ frontend/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Traffic Predictor</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f2f2f2;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            margin: 50px auto;
+            width: 300px;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚦 Traffic Predictor</h2>
+
+    <label>Hour:</label>
+    <input type="number" id="hour"><br><br>
+
+    <label>Day (0-6):</label>
+    <input type="number" id="day"><br><br>
+
+    <label>Weather:</label>
+    <select id="weather">
+        <option value="0">Clear</option>
+        <option value="1">Rain</option>
+    </select><br><br>
+
+    <label>Road Type:</label>
+    <select id="road">
+        <option value="0">Residential</option>
+        <option value="1">Highway</option>
+    </select><br><br>
+
+    <button onclick="predict()">Predict</button>
+
+    <h3 id="result"></h3>
+</div>
+
+<script>
+async function predict() {
+    const data = {
+        hour: parseInt(document.getElementById("hour").value),
+        day: parseInt(document.getElementById("day").value),
+        weather: parseInt(document.getElementById("weather").value),
+        road_type: parseInt(document.getElementById("road").value)
+    };
+
+    const res = await fetch("https://your-render-url.onrender.com/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    document.getElementById("result").innerText =
+        `Traffic: ${result.traffic}
+Confidence: ${result.confidence.toFixed(2)}
+${result.advice}`;
+}
+</script>
+
+</body>
+</html>

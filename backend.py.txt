@@ -1,0 +1,75 @@
+
+Backend--
+model.py
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+import pickle
+
+# Dataset
+data = {
+    "hour": [8, 9, 14, 18, 22, 7, 17],
+    "day": [1, 1, 3, 5, 6, 0, 4],
+    "weather": [0, 1, 0, 1, 0, 1, 1],
+    "road_type": [1, 1, 0, 1, 0, 0, 1],
+    "traffic": ["High", "High", "Low", "High", "Low", "Medium", "High"]
+}
+
+df = pd.DataFrame(data)
+
+X = df.drop("traffic", axis=1)
+y = df["traffic"]
+
+model = RandomForestClassifier()
+model.fit(X, y)
+
+# Save model
+pickle.dump(model, open("traffic_model.pkl", "wb"))
+
+print("Model trained successfully!")
+
+
+app.py
+import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pickle
+
+app = Flask(__name__)
+CORS(app)
+
+model = pickle.load(open("traffic_model.pkl", "rb"))
+
+@app.route("/")
+def home():
+    return " Traffic Prediction API is running"
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    data = request.json
+
+    features = [
+        data["hour"],
+        data["day"],
+        data["weather"],
+        data["road_type"]
+    ]
+
+    prediction = model.predict([features])[0]
+    confidence = max(model.predict_proba([features])[0])
+
+    if prediction == "High":
+        advice = "🚫 Avoid traveling now."
+    elif prediction == "Medium":
+        advice = "⚠️ Moderate traffic. Plan accordingly."
+    else:
+        advice = "✅ Good time to travel."
+
+    return jsonify({
+        "traffic": prediction,
+        "confidence": float(confidence),
+        "advice": advice
+    })
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
